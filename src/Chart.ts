@@ -57,6 +57,7 @@ import { getIndicatorClass } from './extension/indicator/index'
 import { getStyles as getExtensionStyles } from './extension/styles/index'
 
 import Event from './Event'
+import { animate } from './common/utils/animate'
 
 export enum DomPosition {
   Root = 'root',
@@ -882,12 +883,19 @@ export default class ChartImp implements Chart {
     this.scrollByDistance(distance, animationDuration)
   }
 
-  scrollToDataIndex (dataIndex: number, animationDuration?: number): void {
+  scrollToDataIndex (dataIndex: number, animationDuration: number = 0): void {
     const timeScaleStore = this._chartStore.getTimeScaleStore()
-    const distance = (
-      timeScaleStore.getLastBarRightSideDiffBarCount() + (this.getDataList().length - 1 - dataIndex)
-    ) * timeScaleStore.getBarSpace().bar
-    this.scrollByDistance(distance, animationDuration)
+    timeScaleStore.startScroll()
+    if (animationDuration > 0) {
+      const startIdx = timeScaleStore.getVisibleRange().to - 1
+      const difIdx = dataIndex - startIdx
+      animate(animationDuration, (progress) => {
+        const progressIdx = difIdx * progress
+        timeScaleStore.scrollToIdx(startIdx + progressIdx)
+      })
+    } else {
+      timeScaleStore.scrollToIdx(dataIndex)
+    }
   }
 
   scrollToTimestamp (timestamp: number, animationDuration?: number): void {

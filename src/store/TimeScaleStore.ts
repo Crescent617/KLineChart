@@ -147,7 +147,11 @@ export default class TimeScaleStore {
   /**
    * adjust visible range
    */
-  adjustVisibleRange (): void {
+  adjustVisibleRange (newerDataLen: number = 0): void {
+    // NOTE: 获取新数据时保持左侧offset不变，避免一直load数据直到加载完
+    this._startLastBarRightSideDiffBarCount -= newerDataLen
+    this._lastBarRightSideDiffBarCount -= newerDataLen
+
     const dataList = this._chartStore.getDataList()
     const totalBarCount = dataList.length
     const visibleBarCount = this._totalBarSpace / this._barSpace
@@ -176,7 +180,7 @@ export default class TimeScaleStore {
       this._lastBarRightSideDiffBarCount = minRightOffsetBarCount
     }
 
-    let to = Math.round(this._lastBarRightSideDiffBarCount + totalBarCount + 0.5)
+    let to = Math.round(this._lastBarRightSideDiffBarCount + totalBarCount)
     const realTo = to
     if (to > totalBarCount) {
       to = totalBarCount
@@ -293,7 +297,7 @@ export default class TimeScaleStore {
   }
 
   getOffsetRightDistance (): number {
-    return Math.max(0, this._lastBarRightSideDiffBarCount * this._barSpace)
+    return this._lastBarRightSideDiffBarCount * this._barSpace
   }
 
   getLastBarRightSideDiffBarCount (): number {
@@ -344,6 +348,19 @@ export default class TimeScaleStore {
     const distanceBarCount = distance / this._barSpace
     const prevLastBarRightSideDistance = this._lastBarRightSideDiffBarCount * this._barSpace
     this._lastBarRightSideDiffBarCount = this._startLastBarRightSideDiffBarCount - distanceBarCount
+    this._afterScroll(prevLastBarRightSideDistance)
+  }
+
+  scrollToIdx (idx: number): void {
+    if (!this._scrollEnabled) {
+      return
+    }
+    const prevLastBarRightSideDistance = this._lastBarRightSideDiffBarCount * this._barSpace
+    this._lastBarRightSideDiffBarCount = idx + 1 - this._chartStore.getDataList().length
+    this._afterScroll(prevLastBarRightSideDistance)
+  }
+
+  _afterScroll (prevLastBarRightSideDistance: number): void {
     this.adjustVisibleRange()
     this._chartStore.getTooltipStore().recalculateCrosshair(true)
     this._chartStore.getChart().adjustPaneViewport(false, true, true, true)

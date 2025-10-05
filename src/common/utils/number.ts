@@ -14,37 +14,36 @@
 
 /**
  * Binary search for the nearest result
+ * if not found, return the index of the nearest value greater than the target value
  * @param dataList
  * @param valueKey
  * @param targetValue
  * @return {number}
  */
 export function binarySearchNearest<T> (dataList: T[], valueKey: keyof T, targetValue: any): number {
+  if (dataList.length === 0) return 0
+
   let left = 0
-  let right = 0
-  for (right = dataList.length - 1; left !== right;) {
-    const midIndex = Math.floor((right + left) / 2)
-    const mid = right - left
-    const midValue = dataList[midIndex][valueKey]
-    if (targetValue === dataList[left][valueKey]) {
-      return left
-    }
-    if (targetValue === dataList[right][valueKey]) {
-      return right
-    }
-    if (targetValue === midValue) {
-      return midIndex
-    }
+  let right = dataList.length - 1
 
-    if (targetValue > midValue) {
-      left = midIndex
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2)
+    const midValue = Number(dataList[mid][valueKey])
+
+    if (midValue === targetValue) {
+      return mid
+    } else if (midValue < targetValue) {
+      left = mid + 1
     } else {
-      right = midIndex
+      right = mid - 1
     }
+  }
 
-    if (mid <= 2) {
-      break
-    }
+  if (left >= dataList.length) {
+    return dataList.length - 1
+  }
+  if (right < 0) {
+    return 0
   }
   return left
 }

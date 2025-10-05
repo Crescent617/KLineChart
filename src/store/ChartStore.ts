@@ -238,6 +238,7 @@ export default class ChartStore {
     let success = false
     let adjustFlag = false
     let dataLengthChange = 0
+    let newerDataLen = 0
     if (isArray<KLineData>(data)) {
       dataLengthChange = data.length
       switch (type) {
@@ -253,6 +254,7 @@ export default class ChartStore {
           this._dataList = this._dataList.concat(data)
           this._backwardMore = more ?? false
           adjustFlag = dataLengthChange > 0
+          newerDataLen = dataLengthChange
           break
         }
         case LoadDataType.Forward: {
@@ -287,7 +289,7 @@ export default class ChartStore {
       try {
         this._overlayStore.updatePointPosition(dataLengthChange, type)
         if (adjustFlag) {
-          this._timeScaleStore.adjustVisibleRange()
+          this._timeScaleStore.adjustVisibleRange(newerDataLen)
           this._tooltipStore.recalculateCrosshair(true)
           await this._indicatorStore.calcInstance()
           this._chart.adjustPaneViewport(false, true, true, true)
